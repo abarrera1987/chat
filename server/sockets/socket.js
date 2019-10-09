@@ -9,22 +9,26 @@ const usuarios = new Usuarios();
 io.on('connection', (client) => {
 	
 	client.on("entrarChar", (data, callback) => {
-
-		if(!data.nombre) {
+		
+		if(!data.nombre || !data.sala) {
 
 			return callback({
+
 				error: true,
-				mensaje: "El nombre es necesario"
+				mensaje: "El nombre y la sala son necesarios"
+
 			});
 		}
 
-		let personas = usuarios.agregarPersona(client.id, data.nombre);
-		
-		client.broadcast.emit("crearMensaje", crearMensaje(data.nombre, `El usuarios ${data.nombre} ingreso al chat`))
-		
-		client.broadcast.emit("listarPersonas", usuarios.getPersonas());
+		client.join(data.sala);
 
-		return callback( personas );
+		usuarios.agregarPersona(client.id, data.nombre, data.sala);
+		
+		client.broadcast.to(data.sala).emit("crearMensaje", crearMensaje(data.nombre, `El usuarios ${data.nombre} ingreso al chat`))
+		
+		client.broadcast.to(data.sala).emit("listarPersonas", usuarios.getPersonaPorSala(data.sala));
+
+		return callback( usuarios.getPersonaPorSala(data.sala) );
 
 	})
 
@@ -32,9 +36,9 @@ io.on('connection', (client) => {
 
 		let personaBorrada = usuarios.borrarPersona(client.id);
 
-		client.broadcast.emit("crearMensaje", crearMensaje(personaBorrada.nombre, `El usuario ${personaBorrada.nombre} salio del chat`))
+		client.broadcast.to(personaBorrada.sala).emit("crearMensaje", crearMensaje(personaBorrada.nombre, `El usuario ${personaBorrada.nombre} salio del chat`))
 
-		client.broadcast.emit("listarPersonas", usuarios.getPersonas());
+		client.broadcast.to(personaBorrada.sala).emit("listarPersonas", usuarios.getPersonaPorSala(personaBorrada.sala));
 
 	})
 
@@ -44,7 +48,7 @@ io.on('connection', (client) => {
 
 		let mensaje = crearMensaje(persona.nombre, data.mensaje);
 
-		client.broadcast.emit('crearMensaje', mensaje);
+		client.broadcast.to(persona.sala).emit('crearMensaje', mensaje);
 
 	})
 

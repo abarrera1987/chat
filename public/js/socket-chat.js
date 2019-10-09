@@ -2,16 +2,17 @@ var socket = io();
 
 let params = new URLSearchParams(window.location.search);
 // si no existe el parametro lo devuelvo al home
-if (!params.has('nombre')) {
+if (!params.has('nombre') || !params.has('sala')) {
 
 	window.location = "index.html";
-	throw new Error("El nombre es necesario");
+	throw new Error("El nombre y la sala son necesario");
 
 }
 // creamos el arreglo de parametros 
 var usuario = {
 
-	nombre: params.get('nombre')
+	nombre: params.get('nombre'),
+	sala: params.get('sala')
 
 }
 // Iniciamos en el chat y recibimos la lista de usuarios
